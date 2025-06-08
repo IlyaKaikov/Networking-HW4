@@ -1,0 +1,6 @@
+*.docx
+*.pdf
+plot_error.py
+test_sanity.py
+Makefile
+__pycache__/
