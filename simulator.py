@@ -10,7 +10,7 @@ DEPARTURE = 1
 class Event(tuple):
     time: float
     kind: int
-    payload: tuple
+    payload: int | None
 
 def exp_time(rate: float) -> float:
     return random.expovariate(rate)
@@ -48,16 +48,16 @@ def run_sim(T: float, probs: List[float], lam: float, queues: List[int], mus: Li
     total_service = 0.0
     events: List[Event] = []
     first = exp_time(lam)
-    heapq.heappush(events, (first, ARRIVAL, ()))
+    heapq.heappush(events, (first, ARRIVAL, None))
     now = 0.0
 
     while events:
-        time, kind, payload = heapq.heappop(events)
+        time, kind, srv_idx = heapq.heappop(events)
         now = time
         if kind == ARRIVAL:
             next_time = now + exp_time(lam)
             if next_time <= T:
-                heapq.heappush(events, (next_time, ARRIVAL, ()))
+                heapq.heappush(events, (next_time, ARRIVAL, None))
 
             r = random.random()
             cumulative = 0.0
@@ -73,19 +73,16 @@ def run_sim(T: float, probs: List[float], lam: float, queues: List[int], mus: Li
                 srv.in_system += 1
                 if not srv.busy:
                     srv.busy = True
-                    wait = 0.0
                     service = exp_time(srv.mu)
-                    total_wait += wait
                     total_service += service
                     dep_time = now + service
-                    heapq.heappush(events, (dep_time, DEPARTURE, (chosen, now, service)))
+                    heapq.heappush(events, (dep_time, DEPARTURE, chosen))
                 else:
                     srv.queue.append(now)
             else:
                 dropped += 1
 
         else:
-            srv_idx, arrival_time, service_time = payload
             srv = servers[srv_idx]
             served += 1
             srv.in_system -= 1
@@ -96,7 +93,7 @@ def run_sim(T: float, probs: List[float], lam: float, queues: List[int], mus: Li
                 total_wait += wait
                 total_service += service
                 dep_time = now + service
-                heapq.heappush(events, (dep_time, DEPARTURE, (srv_idx, nxt_arrival, service)))
+                heapq.heappush(events, (dep_time, DEPARTURE, srv_idx))
             else:
                 srv.busy = False
 
