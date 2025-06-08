@@ -4,8 +4,8 @@ import random
 from collections import deque
 from typing import Deque, List, Tuple
 
-INGRESS_ARRIVAL = 0
-SERVER_DEPARTURE = 1
+ARRIVAL = 0
+DEPARTURE = 1
 
 class Event(tuple):
     time: float
@@ -27,7 +27,7 @@ class Server:
         self.mu = mu
         self.in_system = 0
 
-def run_sim(T: float,probs: List[float],lam: float,queues: List[int],mus: List[float],*,seed: int | None = None,) -> Tuple[int, int, float, float, float]:
+def run_sim(T: float, probs: List[float], lam: float, queues: List[int], mus: List[float], *, seed: int | None = None) -> Tuple[int, int, float, float, float]:
     if T <= 0:
         raise ValueError("T must be positive")
     M = len(probs)
@@ -48,16 +48,16 @@ def run_sim(T: float,probs: List[float],lam: float,queues: List[int],mus: List[f
     total_service = 0.0
     events: List[Event] = []
     first = exp_time(lam)
-    heapq.heappush(events, (first, INGRESS_ARRIVAL, ()))
+    heapq.heappush(events, (first, ARRIVAL, ()))
     now = 0.0
 
     while events:
         time, kind, payload = heapq.heappop(events)
         now = time
-        if kind == INGRESS_ARRIVAL:
+        if kind == ARRIVAL:
             next_time = now + exp_time(lam)
             if next_time <= T:
-                heapq.heappush(events, (next_time, INGRESS_ARRIVAL, ()))
+                heapq.heappush(events, (next_time, ARRIVAL, ()))
 
             r = random.random()
             cumulative = 0.0
@@ -78,7 +78,7 @@ def run_sim(T: float,probs: List[float],lam: float,queues: List[int],mus: List[f
                     total_wait += wait
                     total_service += service
                     dep_time = now + service
-                    heapq.heappush(events, (dep_time, SERVER_DEPARTURE, (chosen, now, service)))
+                    heapq.heappush(events, (dep_time, DEPARTURE, (chosen, now, service)))
                 else:
                     srv.queue.append(now)
             else:
@@ -96,7 +96,7 @@ def run_sim(T: float,probs: List[float],lam: float,queues: List[int],mus: List[f
                 total_wait += wait
                 total_service += service
                 dep_time = now + service
-                heapq.heappush(events, (dep_time, SERVER_DEPARTURE, (srv_idx, nxt_arrival, service)))
+                heapq.heappush(events, (dep_time, DEPARTURE, (srv_idx, nxt_arrival, service)))
             else:
                 srv.busy = False
 

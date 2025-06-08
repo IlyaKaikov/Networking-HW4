@@ -17,7 +17,6 @@ def run_mm1n(lambda_rate: float, mu_rate: float, capacity: int, horizon: float, 
         raise ValueError("N must be >=1")
     if horizon <= 0:
         raise ValueError("time must be positive")
-
     if seed is None:
         random.seed()
     else:
