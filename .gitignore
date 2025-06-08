@@ -1,5 +1,6 @@
 *.docx
 *.pdf
+*.png
 plot_error.py
 test_sanity.py
 Makefile
