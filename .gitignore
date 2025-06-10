@@ -1,6 +1,7 @@
 *.docx
 *.pdf
 *.png
+*.tmp
 plot_error.py
 test_sanity.py
 stock.py

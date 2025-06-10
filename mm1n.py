@@ -29,12 +29,12 @@ def run_mm1n(lambda_rate: float, mu_rate: float, capacity: int, horizon: float, 
     served = 0
     dropped = 0
     total_wait = 0.0
-    events: list[tuple[float, int, float | None]] = []
+    events: list[tuple[float, int, float | None]] = [] # An event tuple is either (arrival_time, ARRIVAL, None) or (departure_time, DEPARTURE, arrival_time)
     first_arrival = exp_time(lambda_rate)
     heapq.heappush(events, (first_arrival, ARRIVAL, None))
 
     while events:
-        time, kind, payload = heapq.heappop(events)
+        time, kind, arrival_time = heapq.heappop(events)
         if time > horizon:
             now = horizon
             break
@@ -52,15 +52,14 @@ def run_mm1n(lambda_rate: float, mu_rate: float, capacity: int, horizon: float, 
                     departure_time = now + service_time
                     heapq.heappush(events, (departure_time, DEPARTURE, now))
                 else:
-                    queue.append(now)
+                    queue.append(now) # appending arrival time
             else:
                 dropped += 1
 
         else:
             served += 1
-            arrival_time = payload
-            total_wait += now - arrival_time
             in_system -= 1
+            total_wait += (now - arrival_time)
             if queue:
                 next_arrival_time = queue.popleft()
                 service_time = exp_time(mu_rate)
@@ -69,7 +68,7 @@ def run_mm1n(lambda_rate: float, mu_rate: float, capacity: int, horizon: float, 
             else:
                 server_busy = False
 
-    avg_wait = total_wait / served if served else 0.0
+    avg_wait = (total_wait / served) if served else 0.0
     return served, dropped, avg_wait, now
 
 def main() -> None:
