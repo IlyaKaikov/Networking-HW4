@@ -3,5 +3,6 @@
 *.png
 plot_error.py
 test_sanity.py
+stock.py
 Makefile
 __pycache__/
