@@ -7,10 +7,10 @@ from typing import Deque, List, Tuple
 ARRIVAL = 0
 DEPARTURE = 1
 
-class Event(tuple):
+class Event(tuple): # an event tuple is either (arrival_time, ARRIVAL, None) or (departure_time, DEPARTURE, server_index)
     time: float
     kind: int
-    payload: int | None
+    srv_idx: int | None
 
 def exp_time(rate: float) -> float:
     return random.expovariate(rate)
@@ -56,12 +56,16 @@ def run_sim(T: float, probs: List[float], lam: float, queues: List[int], mus: Li
         now = time
         if kind == ARRIVAL:
             next_time = now + exp_time(lam)
-            if next_time <= T:
+            if next_time <= T: # arrivals stop after T time
                 heapq.heappush(events, (next_time, ARRIVAL, None))
 
-            r = random.random()
+            r = random.random() # random range is [0,1)
             cumulative = 0.0
             chosen = 0
+
+            # the following for loop chooses the next server based on the server probabilities and random r value
+            # for example: [0, p1=0.25, p1+p2=0.5, r=0.6, p1+p2+p3=0.75, p1+p2+p3+p4=1]
+            # server p3 will be chosen because r < cumulative = p1+p2+p3
             for i, p in enumerate(probs):
                 cumulative += p
                 if r < cumulative:
@@ -89,18 +93,17 @@ def run_sim(T: float, probs: List[float], lam: float, queues: List[int], mus: Li
             if srv.queue:
                 nxt_arrival = srv.queue.popleft()
                 wait = now - nxt_arrival
-                service = exp_time(srv.mu)
                 total_wait += wait
+                service = exp_time(srv.mu)
                 total_service += service
                 dep_time = now + service
                 heapq.heappush(events, (dep_time, DEPARTURE, srv_idx))
             else:
                 srv.busy = False
 
-    Tend = now
-    avg_wait = total_wait / served if served else 0.0
-    avg_service = total_service / served if served else 0.0
-    return served, dropped, Tend, avg_wait, avg_service
+    avg_wait = (total_wait / served) if served else 0.0
+    avg_service = (total_service / served) if served else 0.0
+    return served, dropped, now, avg_wait, avg_service
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -124,8 +127,8 @@ def main() -> None:
     except ValueError as e:
         parser.error(f"Invalid numeric value: {e}")
 
-    served, dropped, Tend, avg_wait, avg_service = run_sim(T, probs, lam, queues, mus, seed=seed)
-    print(f"{served} {dropped} {Tend:.4f} {avg_wait:.4f} {avg_service:.4f}")
+    served, dropped, end_time, avg_wait, avg_service = run_sim(T, probs, lam, queues, mus, seed=seed)
+    print(f"{served} {dropped} {end_time:.4f} {avg_wait:.4f} {avg_service:.4f}")
 
 if __name__ == "__main__":
     main()
