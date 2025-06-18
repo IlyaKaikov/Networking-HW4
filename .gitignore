@@ -2,10 +2,10 @@
 *.pdf
 *.png
 *.tmp
+*.zip
 plot_error.py
 test_sanity.py
 stock.py
-Makefile
 simulator
 __pycache__/
 /submission
